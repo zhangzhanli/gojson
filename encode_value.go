@@ -7,8 +7,17 @@ import (
 
 func (e *Encoder) EncodeValue(value interface{}) error {
 	switch x := value.(type) {
+	case map[string]interface{}:
+		e.EncodeObject(x)
+
+	case []interface{}:
+		e.EncodeArray(x)
+
 	case string:
 		e.EncodeString(x)
+
+	case []byte:
+		e.EncodeBytes(x)
 
 	case bool:
 		e.EncodeBool(x)
