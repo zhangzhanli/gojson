@@ -31,18 +31,44 @@ func (d *Decoder) DecodeString() (string, error) {
 	}
 
 	d.cursor++
-	data := d.data[d.cursor:]
+	src := d.data[d.cursor:]
+	data := make([]byte, len(src))
 
-	for i, c := range data {
+	k := 0
+	for i := 0; i < len(src); i++ {
+		c := src[i]
 		if c == '"' {
 			d.cursor = d.cursor + i + 1
-			return UnsafeConvertBytesToString(data[:i]), nil
+			return UnsafeConvertBytesToString(data[:k]), nil
 		} else if c == '\\' {
-			if next := i + 1; next < len(data) && (data[next] == '\\' || data[next] == '"') {
-				//copy(data[i:], data[next:])
-				data = append(data[:i], data[next:]...)
+			i++
+			if i < len(src) {
+				c = src[i]
+				switch c {
+				case '\\':
+					data[k] = '\\'
+				case '"':
+					data[k] = '"'
+				case 'n':
+					data[k] = '\n'
+				case 't':
+					data[k] = '\t'
+				case 'f':
+					data[k] = '\f'
+				case 'b':
+					data[k] = '\b'
+				case 'r':
+					data[k] = '\r'
+				default:
+					data[k] = '\\'
+					k++
+					data[k] = c
+				}
 			}
+		} else {
+			data[k] = c
 		}
+		k++
 	}
 
 	return "", NewParseError(d.data[d.length-1], d.length-1)
